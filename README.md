@@ -1,11 +1,30 @@
+<div align="center">
+
 # ChatLens
 
-Upload a WhatsApp chat export and get:
+**Upload a WhatsApp chat export and get chat statistics plus an AI-written relationship report.**
+
+![Status](https://img.shields.io/badge/status-beta-d29922?style=flat-square&labelColor=0d1117)
+![AI providers](https://img.shields.io/badge/AI-Gemini%20%7C%20Claude%20%7C%20OpenRouter-1f6feb?style=flat-square&labelColor=0d1117)
+
+</div>
+
+---
+
+## Overview
+
+ChatLens is a web app that turns an exported WhatsApp chat into insights. You upload the export (`.txt` or `.zip`) and get:
 
 1. **Exact stats**: who texts more, who starts conversations, reply speed, active hours, streaks, emojis and favourite words. These are calculated in the browser.
 2. **An AI-written read on the relationship** from Gemini, Claude or OpenRouter, sent through a Supabase Edge Function.
 
 Built with HTML, CSS and vanilla JavaScript, plus one Supabase Edge Function. There's no build step and no framework.
+
+> **Status: beta.** The stats work fully in the browser. The AI report passes its tests with a simulated AI and is waiting on a real AI key before it's used live. The site isn't publicly hosted yet.
+
+## Problem Statement
+
+Group and personal chats hold years of conversation, but there's no easy way to see patterns in them: who talks most, when people are active, how the tone has changed. ChatLens makes those patterns visible and adds an AI summary that puts them into words.
 
 ## How it works
 
@@ -40,24 +59,21 @@ Browser                                              Supabase Edge Function     
 2. Click **Try with a sample chat**. You should see the stats page.
 3. Export a real chat (WhatsApp → chat → ⋮ → More → Export chat → *Without media*) and upload it.
 
-✅ Check: the message counts match what you'd expect, and dates and times look right. If your dates show up swapped (day and month), tell me the first line of your export.
+✅ Check: the message counts match what you'd expect, and dates and times look right.
 
 ## Phase 2: deploy the edge function
 
 You need the [Supabase CLI](https://supabase.com/docs/guides/cli) and a Supabase project.
 
 ```bash
-cd chatlens
-supabase login
-supabase init                          # only if there's no supabase/config.toml yet
-supabase link --project-ref YOUR_PROJECT_REF
+npx supabase login
 
 # add the API keys you have (one is enough)
-supabase secrets set GEMINI_API_KEY=...        # https://aistudio.google.com/apikey
-supabase secrets set ANTHROPIC_API_KEY=...     # https://console.anthropic.com
-supabase secrets set OPENROUTER_API_KEY=...    # https://openrouter.ai/keys
+npx supabase secrets set GEMINI_API_KEY=...     --project-ref YOUR_PROJECT_REF   # https://aistudio.google.com/apikey
+npx supabase secrets set ANTHROPIC_API_KEY=...  --project-ref YOUR_PROJECT_REF   # https://console.anthropic.com
+npx supabase secrets set OPENROUTER_API_KEY=... --project-ref YOUR_PROJECT_REF   # https://openrouter.ai/keys
 
-supabase functions deploy analyze --no-verify-jwt
+npx supabase functions deploy analyze --no-verify-jwt --use-api --project-ref YOUR_PROJECT_REF
 ```
 
 `--no-verify-jwt` is needed because visitors aren't logged in. The browser sends only your **publishable key**, and the function does its own protection (see Security).
@@ -73,6 +89,8 @@ SUPABASE_URL: 'https://YOUR_PROJECT_REF.supabase.co',
 SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_...',
 ```
 
+The publishable key is public by design, so it's fine in the repo. Never put AI keys here.
+
 Reload the page, load a chat, pick a provider and click **Write my report**.
 
 ✅ Check: the dropdown lists only the providers you added keys for, and the report shows real names (they're swapped back in the browser).
@@ -82,27 +100,30 @@ Reload the page, load a chat, pick a provider and click **Write my report**.
 The defaults are `gemini-3.8-flash`, `claude-sonnet-5-5` and `google/gemini-3.8-flash` (OpenRouter). You can override any of them without changing code:
 
 ```bash
-supabase secrets set ANTHROPIC_MODEL=claude-haiku-5-5   # cheaper
-supabase secrets set GEMINI_MODEL=gemini-3.5-flash-lite
+npx supabase secrets set ANTHROPIC_MODEL=claude-haiku-5-5 --project-ref YOUR_PROJECT_REF   # cheaper
+npx supabase secrets set GEMINI_MODEL=gemini-3.5-flash-lite --project-ref YOUR_PROJECT_REF
 ```
 
 Rough cost per report with the default 150k-character sample (about 40–60k tokens in): around $0.13 (about ₹11) on Claude Sonnet 5.5, less on Haiku, and usually less on Gemini Flash. Check each provider's pricing page for current rates. Lower `TRANSCRIPT_CHAR_BUDGET` in `config.js` to spend less.
 
 ## Security and privacy (read before sharing the link)
 
-- **Lock it to your site.** Once it's hosted, run `supabase secrets set ALLOWED_ORIGINS=https://your-site.com`. Without this, anyone can call your function and use up your API credit.
+- **Lock it to your site.** Once it's hosted, run `npx supabase secrets set ALLOWED_ORIGINS=https://your-site.com --project-ref YOUR_PROJECT_REF`. Without this, anyone can call your function and use up your API credit.
 - There's a basic limit of 10 reports per IP per hour (`REPORTS_PER_HOUR_PER_IP`). It lives in memory, so it resets when the function restarts. For real traffic, add Supabase Auth (log in to generate a report) or a rate-limit table.
 - Chats are never stored. The function only holds them in memory for the length of one request. Don't add `console.log(body)`, because Supabase keeps function logs.
 - Anonymising is on by default. Names inside messages are replaced only when they match the contact names, so nicknames still get through.
 - A chat includes another person's messages. Tell your users to only upload chats they're part of.
+- API keys and other secrets are kept in Supabase secrets and never committed to this repository (see `.gitignore`).
 
 ## Tests
 
 ```bash
-node tests/test-parser-stats.js                        # parser + stats (Android, iPhone, US, German formats)
-node tests/test-report.js                              # anonymiser + sampling
-node --experimental-strip-types tests/e2e.mjs /tmp     # full page in Chromium with a fake AI (needs Playwright)
+node tests/test-parser-stats.js                         # parser + stats (Android, iPhone, US, German formats)
+node tests/test-report.js                               # anonymiser + sampling
+node --experimental-strip-types tests/e2e.mjs ./out     # full page in a browser with a fake AI (needs Playwright)
 ```
+
+For the e2e test, set `PW_CHANNEL=msedge` (or `chrome`) to use an installed browser instead of Playwright's own Chromium.
 
 ## Ideas for next steps
 
@@ -110,3 +131,8 @@ node --experimental-strip-types tests/e2e.mjs /tmp     # full page in Chromium w
 - iMessage or Telegram parsers: add one to `parser.js` that returns the same `{date, sender, text, type}` shape.
 - "Compare two time periods" to answer *what changed*.
 - Language setting: pass the user's language in `meta` and add a line about it in `prompt.ts`.
+
+## Author
+
+**Mohammed Shamsul Qhadri Shareef**
+GitHub: [@MohammedShareef3527](https://github.com/MohammedShareef3527)

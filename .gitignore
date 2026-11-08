@@ -1,13 +1,32 @@
+# Secrets and API keys (never commit these — AI keys live in Supabase secrets)
+.env
+.env.*
+!.env.example
+
 # Supabase CLI local state (holds project refs from your machine)
 supabase/.temp/
 supabase/.branches/
 
-# Secrets — AI keys live in Supabase secrets, never in the repo
-.env
-.env.*
-
+# Dependencies and build output
 node_modules/
+dist/
+build/
+.vercel/
 test-output/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Uploaded chat exports used for local testing
+uploads/
+*.chat.txt
+
+# Logs, editor and OS files
 *.log
+.vscode/
+.idea/
 .DS_Store
 Thumbs.db
