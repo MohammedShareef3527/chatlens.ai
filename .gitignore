@@ -1,0 +1,27 @@
+# Secrets and API keys (never commit these)
+.env
+.env.*
+!.env.example
+
+# Dependencies and build output
+node_modules/
+dist/
+build/
+.vercel/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Uploaded chat exports used for local testing
+uploads/
+*.chat.txt
+
+# Logs, editor and OS files
+*.log
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
