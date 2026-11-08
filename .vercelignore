@@ -1,0 +1,6 @@
+# Only the static site is served; the edge function runs on Supabase
+supabase/
+tests/
+README.md
+.env
+.env.*
