@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ChatLens — what your chat really says</title>
+  <meta name="description" content="Upload a WhatsApp chat export and get honest stats plus an AI-written read on the relationship.">
+  <meta name="theme-color" content="#f6f6f3" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: dark)">
+  <meta property="og:title" content="ChatLens — what your chat really says">
+  <meta property="og:description" content="Upload a WhatsApp chat export and get honest stats plus an AI-written read on the relationship.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232a78d6'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%23fff' stroke-width='3'/%3E%3Cpath d='M16 7a9 9 0 0 1 0 18z' fill='%23fff'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="logo"><span class="logo-mark" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="none" stroke="#fff" stroke-width="2"/><path d="M8 2a6 6 0 0 1 0 12z" fill="#fff"/></svg></span> ChatLens</div>
+      <div class="steps" id="stepLabel" data-step="1" aria-live="polite">Step 1 of 3</div>
+    </header>
+
+    <!-- STEP 1: upload -->
+    <section id="uploadSection">
+      <div class="eyebrow">WhatsApp chat analyser</div>
+      <h1>What does your chat <span class="hl">really</span> say?</h1>
+      <p class="lede">Upload a WhatsApp chat export. You'll get the numbers — who texts more, who starts, who replies faster — and then an honest AI read on the relationship.</p>
+
+      <label class="drop" id="drop" tabindex="0">
+        <input type="file" id="fileInput" accept=".txt,.zip,text/plain,application/zip">
+        <span class="drop-icon" aria-hidden="true"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="m7 9 5-5 5 5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></span>
+        <div class="big"><u>Click to upload</u> or drop your chat here</div>
+        <div class="muted">WhatsApp export — .txt or .zip</div>
+      </label>
+
+      <div class="row">
+        <span class="or">No export handy?</span>
+        <button type="button" id="sampleBtn">Try with a sample chat</button>
+        <span class="muted" id="fileStatus"></span>
+      </div>
+      <div class="error hidden" id="uploadError" role="alert"></div>
+
+      <details class="howto">
+        <summary>How do I export a WhatsApp chat?</summary>
+        <ol>
+          <li>Open the chat in WhatsApp.</li>
+          <li>Android: tap ⋮ → More → Export chat. iPhone: tap the contact name → Export chat.</li>
+          <li>Choose <strong>Without media</strong>.</li>
+          <li>Save or send the file to yourself, then upload it here.</li>
+        </ol>
+      </details>
+
+      <div class="privacy">
+        <svg class="privacy-icon" aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        <span>Your chat is read <strong>inside this browser</strong>. The stats never leave your device. Only if you ask for the AI report is a trimmed, anonymised sample sent to the AI — and nothing is stored.</span>
+      </div>
+    </section>
+
+    <!-- STEP 2: stats -->
+    <section id="statsSection" class="hidden">
+      <div class="eyebrow">The numbers</div>
+      <h2 id="statsTitle">The numbers</h2>
+      <p class="sub" id="statsSub"></p>
+
+      <div class="grid" id="tiles"></div>
+
+      <div class="grid-2 section">
+        <div class="card">
+          <h3>Share of voice</h3>
+          <div id="shareChart"></div>
+        </div>
+        <div class="card">
+          <h3>Who starts the conversation</h3>
+          <div id="startChart"></div>
+        </div>
+      </div>
+
+      <div class="card section">
+        <h3>When you talk (messages by hour)</h3>
+        <div id="hourChart"></div>
+      </div>
+
+      <div class="grid-2 section">
+        <div class="card">
+          <h3>Messages per month</h3>
+          <div id="monthChart"></div>
+        </div>
+        <div class="card">
+          <h3>Day of the week</h3>
+          <div id="weekChart"></div>
+        </div>
+      </div>
+
+      <div class="section section-head"><h2>Person by person</h2></div>
+      <div class="grid-2" id="people"></div>
+
+      <div class="row section">
+        <button type="button" id="restartBtn">Upload a different chat</button>
+      </div>
+    </section>
+
+    <!-- STEP 3: AI report -->
+    <section id="reportSection" class="hidden section">
+      <div class="card">
+        <div class="eyebrow">Step 3 · AI report</div>
+        <h2>The honest read</h2>
+        <p class="sub">An AI reads a sample of your chat plus the numbers above and writes what it sees.</p>
+        <div class="report-controls">
+          <select id="providerSelect" aria-label="AI provider"></select>
+          <label class="check"><input type="checkbox" id="anonCheck" checked> Hide names, numbers &amp; links from the AI</label>
+          <button type="button" class="primary" id="reportBtn">Write my report</button>
+        </div>
+        <p class="muted" id="reportInfo"></p>
+        <div class="error hidden" id="reportError" role="alert"></div>
+      </div>
+      <article class="report" id="reportOut" aria-live="polite"></article>
+    </section>
+
+    <footer>
+      <span>ChatLens is for reflection and fun — it's an AI's reading of a sample of messages, not a judgement of anyone.</span>
+      <span>Stats are worked out on your device.</span>
+    </footer>
+  </div>
+
+  <div id="tooltip" class="hidden" role="tooltip"></div>
+
+  <!-- JSZip opens .zip exports in the browser -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/parser.js"></script>
+  <script src="js/stats.js"></script>
+  <script src="js/sample.js"></script>
+  <script src="js/report.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
